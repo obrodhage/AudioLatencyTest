@@ -84,7 +84,7 @@ public class VisualsController : MonoBehaviour
         {
             var randomPoint = Vector2.zero + Random.insideUnitCircle * 500 * 0.5f;
             var v3Pos = new Vector3(randomPoint.x, 120, randomPoint.y);
-            var fire = Instantiate(prefabCampfire, v3Pos, Quaternion.Euler(-90, 0, 0), campfiresParent);
+            var fire = Instantiate(prefabCampfire, v3Pos, Quaternion.Euler(0, 0, 0), campfiresParent);
             fireObjects.Add(fire);
         }
     }

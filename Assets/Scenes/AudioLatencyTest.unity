@@ -8164,7 +8164,7 @@ MonoBehaviour:
   - {fileID: 9100000, guid: 13ebfc420db653349b98dcf5d5b51e64, type: 2}
   - {fileID: 9100000, guid: 338219d23f162ae4f9dc031cd2ade80b, type: 2}
   campfiresParent: {fileID: 619457818}
-  prefabCampfire: {fileID: 5833291020720066141, guid: 6a533e35960804a2fae4813deb2bf588, type: 3}
+  prefabCampfire: {fileID: 1146700421931995998, guid: 97848dfabb318493da03af9147839638, type: 3}
 --- !u!1 &1265884543
 GameObject:
   m_ObjectHideFlags: 0
