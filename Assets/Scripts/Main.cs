@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class Main : MonoBehaviour
@@ -12,10 +9,15 @@ public class Main : MonoBehaviour
     
     [SerializeField] private Button buttonQuit;
     
+    [SerializeField] private AudioListener audioListener;
+    
     // Start is called before the first frame update
     private void Start()
     {
         buttonQuit.onClick.AddListener(OnClickQuit);
+
+        //audioListener.velocityUpdateMode = AudioVelocityUpdateMode.Auto;
+        //Debug.Log(audioListener);
     }
 
     private void OnClickQuit()

@@ -49,7 +49,8 @@ public class VisualsController : MonoBehaviour
         
         if (camIsMoving)
         {
-            mainCam.transform.Rotate(Vector3.up, 10.0f * Time.deltaTime);
+            //mainCam.transform.Rotate(Vector3.up, 10.0f * Time.deltaTime);
+            mainCam.transform.RotateAround(new Vector3(50,128, 50), Vector3.up, 10 * Time.deltaTime);
         }
 
         if (!monstersActive) return;

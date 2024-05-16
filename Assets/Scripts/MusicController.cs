@@ -36,6 +36,9 @@ public class MusicController : MonoBehaviour
     private bool isPaused;
     private bool randomLayers;
     
+    private float sampleDisplayUpdate;
+    private float sampleDisplayUpdateInterval;
+    
     private float nextRandomLayerUpdate;
     private float randomLayerUpdateInterval;
     private float timer;
@@ -51,6 +54,7 @@ public class MusicController : MonoBehaviour
             audioLayerActive.Add(true);
         }
 
+        sampleDisplayUpdateInterval = 1f;
         randomLayerUpdateInterval = 2f;
             
         dropdownAudioFormat.onValueChanged.AddListener(OnAudioFormatChanged);
@@ -72,7 +76,15 @@ public class MusicController : MonoBehaviour
     {
         timer = Time.realtimeSinceStartup;
         
-        if (!randomLayers || !isPlaying) return;
+        if (!isPlaying) return;
+        
+        if (timer >= sampleDisplayUpdate)
+        {
+            sampleDisplayUpdate = timer + sampleDisplayUpdateInterval;
+            DisplayAudioSourceSamples();
+        }
+        
+        if (!randomLayers) return;
         
         if (timer >= nextRandomLayerUpdate)
         {
@@ -83,6 +95,8 @@ public class MusicController : MonoBehaviour
             else if (randLayer == 2) toggleLayer2.isOn = !toggleLayer2.isOn;
             else if (randLayer == 3) toggleLayer3.isOn = !toggleLayer3.isOn;
             else if (randLayer == 4) toggleLayer4.isOn = !toggleLayer4.isOn;
+            
+            DisplayAudioSourceSamples();
         }
     }
     //
@@ -216,19 +230,28 @@ public class MusicController : MonoBehaviour
 
     private void DisplayAudioSourceSamples()
     {
-        textLayer0.text = GetAudioTimeSample(0);
-        textLayer1.text = GetAudioTimeSample(1);
-        textLayer2.text = GetAudioTimeSample(2);
-        textLayer3.text = GetAudioTimeSample(3);
-        textLayer4.text = GetAudioTimeSample(4);
+        var baseSample = !activeAudioSources[0] ? 0 : activeAudioSources[0].timeSamples;
+        textLayer0.text = "Current timeSample: " + baseSample;
+        
+        textLayer1.text = GetAudioTimeSample(baseSample, 1);
+        textLayer2.text = GetAudioTimeSample(baseSample, 2);
+        textLayer3.text = GetAudioTimeSample(baseSample, 3);
+        textLayer4.text = GetAudioTimeSample(baseSample, 4);
     }
 
-    private string GetAudioTimeSample(int index)
+    private string GetAudioTimeSample(int baseSample, int index)
     {
-        if (activeAudioSources[index])
-            return "Current timeSample: " + activeAudioSources[index].timeSamples;
-        else
-            return "";
+        var s = "";
+        
+        if (!activeAudioSources[index]) return s;
+
+        if (!activeAudioSources[index].isPlaying) return s;
+        
+        var sample = activeAudioSources[index].timeSamples;
+        s = "Current timeSample: " + sample;
+        s += (sample - baseSample != 0) ? "  :(" : "";
+
+        return s;
     }
     
     //
