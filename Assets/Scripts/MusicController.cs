@@ -25,6 +25,8 @@ public class MusicController : MonoBehaviour
     [SerializeField] private List<AudioSource> audioSourcesWav;
     [SerializeField] private List<AudioSource> audioSourcesMp3;
 
+    private Main mainController;
+    
     private int selectedAudioFormat;
 
     private List<AudioSource> activeAudioSources;
@@ -41,10 +43,11 @@ public class MusicController : MonoBehaviour
     
     private float nextRandomLayerUpdate;
     private float randomLayerUpdateInterval;
-    private float timer;
     
-    private void Start()
+    public void OnInit(Main main)
     {
+        mainController = main;
+        
         selectedAudioFormat = dropdownAudioFormat.value;
 
         activeAudioSources = new List<AudioSource>();
@@ -72,10 +75,8 @@ public class MusicController : MonoBehaviour
         ResetSampleTextFields();
     }
 
-    private void Update()
+    public void OnUpdate(float timer)
     {
-        timer = Time.realtimeSinceStartup;
-        
         if (!isPlaying) return;
         
         if (timer >= sampleDisplayUpdate)
@@ -99,6 +100,7 @@ public class MusicController : MonoBehaviour
             DisplayAudioSourceSamples();
         }
     }
+    
     //
     // Dropdown Action
     //

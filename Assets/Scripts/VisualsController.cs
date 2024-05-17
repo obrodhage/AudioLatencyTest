@@ -14,6 +14,8 @@ public class VisualsController : MonoBehaviour
     [SerializeField] private GameObject animatedGoblins;
     
     [SerializeField] private List<RuntimeAnimatorController> goblinAnimControllers;
+
+    private Main mainController;
     
     private bool camIsMoving;
     private bool monstersActive;
@@ -22,11 +24,11 @@ public class VisualsController : MonoBehaviour
     private int curGoblinIndex;
     private float nextGoblinUpdate;
     private float goblinUpdateInterval;
-    private float timer;
     
-    // Start is called before the first frame update
-    private void Start()
+    public void OnInit(Main main)
     {
+        mainController = main;
+        
         goblinUpdateInterval = .5f;
         
         goblinAnimators = new List<Animator>();
@@ -43,14 +45,12 @@ public class VisualsController : MonoBehaviour
         toggleMonsters.onValueChanged.AddListener(OnToggleMonstersChanged);
     }
 
-    private void Update()
+    public void OnUpdate(float timer)
     {
-        timer = Time.realtimeSinceStartup;
-        
         if (camIsMoving)
         {
             //mainCam.transform.Rotate(Vector3.up, 10.0f * Time.deltaTime);
-            mainCam.transform.RotateAround(new Vector3(50,128, 50), Vector3.up, 10 * Time.deltaTime);
+            mainCam.transform.RotateAround(new Vector3(50,128, 50), Vector3.up, 15 * Time.deltaTime);
         }
 
         if (!monstersActive) return;
@@ -77,6 +77,12 @@ public class VisualsController : MonoBehaviour
     private void OnToggleCamMovementChanged(bool isOn)
     {
         camIsMoving = isOn;
+
+        if (mainController)
+        {
+            var sfxController = mainController.GetSfxController();
+            if (sfxController) sfxController.SetFootsteps(camIsMoving);
+        }
     }
     private void OnToggleMonstersChanged(bool isOn) {
         monsters.SetActive(isOn);

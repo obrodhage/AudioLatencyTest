@@ -11,15 +11,31 @@ public class Main : MonoBehaviour
     
     [SerializeField] private AudioListener audioListener;
     
-    // Start is called before the first frame update
-    private void Start()
-    {
-        buttonQuit.onClick.AddListener(OnClickQuit);
+    private float timer;
 
-        //audioListener.velocityUpdateMode = AudioVelocityUpdateMode.Auto;
-        //Debug.Log(audioListener);
+    public SfxController GetSfxController()
+    {
+        return sfxController;
     }
 
+    private void Start()
+    {
+        visualsController.OnInit(this);
+        musicController.OnInit(this);
+        sfxController.OnInit(this);
+        
+        buttonQuit.onClick.AddListener(OnClickQuit);
+    }
+
+    private void Update()
+    {
+        timer = Time.realtimeSinceStartup;
+
+        visualsController.OnUpdate(timer);
+        musicController.OnUpdate(timer);
+        sfxController.OnUpdate(timer);
+    }
+    
     private void OnClickQuit()
     {
         Application.Quit();
