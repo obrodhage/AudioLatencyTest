@@ -1,6 +1,7 @@
 using TMPro;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 using UnityEngine.UI;
 
 public class MusicController : MonoBehaviour
@@ -9,6 +10,7 @@ public class MusicController : MonoBehaviour
     [SerializeField] private Button buttonPlay;
     [SerializeField] private Button buttonPause;
     [SerializeField] private Button buttonStop;
+    [SerializeField] private Slider sliderVolume;
     [SerializeField] private Toggle toggleLayer0;
     [SerializeField] private Toggle toggleLayer1;
     [SerializeField] private Toggle toggleLayer2;
@@ -19,24 +21,32 @@ public class MusicController : MonoBehaviour
     [SerializeField] private TMP_Text textLayer2;
     [SerializeField] private TMP_Text textLayer3;
     [SerializeField] private TMP_Text textLayer4;
+    [SerializeField] private Toggle toggleSync;
     [SerializeField] private Toggle toggleRandom;
     
     [SerializeField] private List<AudioSource> audioSourcesOgg;
     [SerializeField] private List<AudioSource> audioSourcesWav;
     [SerializeField] private List<AudioSource> audioSourcesMp3;
 
+    [Range(0, 100)]
+    [SerializeField] private List<int> audioSourcesVolumes;
+    
     private Main mainController;
     
     private int selectedAudioFormat;
 
     private List<AudioSource> activeAudioSources;
     private List<bool> audioLayerActive;
+    private List<int> audioSourceTimeSamples;
     
     private const int AudioLayers = 5;
 
     private bool isPlaying;
     private bool isPaused;
+    private bool syncLayers;
     private bool randomLayers;
+
+    private float currentAudioVolume;
     
     private float sampleDisplayUpdate;
     private float sampleDisplayUpdateInterval;
@@ -52,11 +62,16 @@ public class MusicController : MonoBehaviour
 
         activeAudioSources = new List<AudioSource>();
         audioLayerActive = new List<bool>();
+        audioSourceTimeSamples = new List<int>();
+            
         for (var i = 0; i < AudioLayers; ++i) {
             activeAudioSources.Add(new AudioSource());
             audioLayerActive.Add(true);
+            audioSourceTimeSamples.Add(0);
         }
 
+        currentAudioVolume = .25f;
+        
         sampleDisplayUpdateInterval = 1f;
         randomLayerUpdateInterval = 2f;
             
@@ -64,11 +79,13 @@ public class MusicController : MonoBehaviour
         buttonPlay.onClick.AddListener(OnClickPlay);
         buttonPause.onClick.AddListener(OnClickPause);
         buttonStop.onClick.AddListener(OnClickStop);
+        sliderVolume.onValueChanged.AddListener(OnSliderVolumeChanged);
         toggleLayer0.onValueChanged.AddListener(OnToggleLayer0Changed);
         toggleLayer1.onValueChanged.AddListener(OnToggleLayer1Changed);
         toggleLayer2.onValueChanged.AddListener(OnToggleLayer2Changed);
         toggleLayer3.onValueChanged.AddListener(OnToggleLayer3Changed);
         toggleLayer4.onValueChanged.AddListener(OnToggleLayer4Changed);
+        toggleSync.onValueChanged.AddListener(OnToggleSyncChanged);
         toggleRandom.onValueChanged.AddListener(OnToggleRandomChanged);
 
         UpdateControlButtons();
@@ -82,7 +99,7 @@ public class MusicController : MonoBehaviour
         if (timer >= sampleDisplayUpdate)
         {
             sampleDisplayUpdate = timer + sampleDisplayUpdateInterval;
-            DisplayAudioSourceSamples();
+            DisplayAndSyncAudioSourceSamples();
         }
         
         if (!randomLayers) return;
@@ -97,7 +114,7 @@ public class MusicController : MonoBehaviour
             else if (randLayer == 3) toggleLayer3.isOn = !toggleLayer3.isOn;
             else if (randLayer == 4) toggleLayer4.isOn = !toggleLayer4.isOn;
             
-            DisplayAudioSourceSamples();
+            DisplayAndSyncAudioSourceSamples();
         }
     }
     
@@ -144,7 +161,7 @@ public class MusicController : MonoBehaviour
         isPaused = true;
         UpdateControlButtons();
         
-        DisplayAudioSourceSamples();
+        DisplayAndSyncAudioSourceSamples();
     }
 
     private void OnClickStop()
@@ -158,6 +175,16 @@ public class MusicController : MonoBehaviour
         ResetSampleTextFields();
     }
 
+    private void UpdateAudioSourceVolumes()
+    {
+        for (var i = 0; i < AudioLayers; ++i)
+        {
+            if (activeAudioSources[i]) {
+                activeAudioSources[i].volume = audioSourcesVolumes[i] * .01f * currentAudioVolume;
+            }
+        }
+    }
+
     private void PlayAllAudioSources(bool resetSource = false)
     {
         if (selectedAudioFormat == 0) PlayAudio(audioSourcesOgg, resetSource);
@@ -168,7 +195,6 @@ public class MusicController : MonoBehaviour
     private void PlayAudio(List<AudioSource> sources, bool resetSource)
     {
         for (var i = 0; i < AudioLayers; ++i)
-        //for (var i = AudioLayers-1; i >= 0; --i)
         {
             if (resetSource) {
                 activeAudioSources[i] = null;
@@ -184,7 +210,7 @@ public class MusicController : MonoBehaviour
                 activeAudioSources[i].bypassReverbZones = true;
                 activeAudioSources[i].playOnAwake = false;
                 activeAudioSources[i].loop = true;
-                //activeAudioSources[i].volume = 0.25f;
+                activeAudioSources[i].volume = audioSourcesVolumes[i] * .01f * currentAudioVolume;
                 activeAudioSources[i].spatialBlend = 0f;
             }
 
@@ -230,15 +256,15 @@ public class MusicController : MonoBehaviour
         textLayer4.text = "";
     }
 
-    private void DisplayAudioSourceSamples()
+    private void DisplayAndSyncAudioSourceSamples()
     {
-        var baseSample = !activeAudioSources[0] ? 0 : activeAudioSources[0].timeSamples;
-        textLayer0.text = "Current timeSample: " + baseSample;
+        audioSourceTimeSamples[0] = !activeAudioSources[0] ? 0 : activeAudioSources[0].timeSamples;
+        textLayer0.text = "Current timeSample: " + audioSourceTimeSamples[0];
         
-        textLayer1.text = GetAudioTimeSample(baseSample, 1);
-        textLayer2.text = GetAudioTimeSample(baseSample, 2);
-        textLayer3.text = GetAudioTimeSample(baseSample, 3);
-        textLayer4.text = GetAudioTimeSample(baseSample, 4);
+        textLayer1.text = GetAudioTimeSample(audioSourceTimeSamples[0], 1);
+        textLayer2.text = GetAudioTimeSample(audioSourceTimeSamples[0], 2);
+        textLayer3.text = GetAudioTimeSample(audioSourceTimeSamples[0], 3);
+        textLayer4.text = GetAudioTimeSample(audioSourceTimeSamples[0], 4);
     }
 
     private string GetAudioTimeSample(int baseSample, int index)
@@ -249,10 +275,16 @@ public class MusicController : MonoBehaviour
 
         if (!activeAudioSources[index].isPlaying) return s;
         
-        var sample = activeAudioSources[index].timeSamples;
-        s = "Current timeSample: " + sample;
-        s += (sample - baseSample != 0) ? "  :(" : "";
-
+        audioSourceTimeSamples[index] = activeAudioSources[index].timeSamples;
+        s = "Current timeSample: " + audioSourceTimeSamples[index];
+        
+        //s += (audioSourceTimeSamples[index] - baseSample != 0) ? "  :(" : "";
+        if (audioSourceTimeSamples[index] - baseSample != 0)
+        {
+            s += "  :(";
+            if (syncLayers) activeAudioSources[index].timeSamples = baseSample;
+        }
+            
         return s;
     }
     
@@ -278,7 +310,12 @@ public class MusicController : MonoBehaviour
 
         audioLayerActive[layer] = isOn;
     }
-    
+
+    private void OnSliderVolumeChanged(float value)
+    {
+        currentAudioVolume = value;
+        UpdateAudioSourceVolumes();
+    }
     private void OnToggleLayer0Changed(bool isOn) {
         // ToggleLayer(0, isOn);
     }
@@ -294,7 +331,10 @@ public class MusicController : MonoBehaviour
     private void OnToggleLayer4Changed(bool isOn) {
         ToggleLayer(4, isOn);
     }
-    
+    private void OnToggleSyncChanged(bool isOn)
+    {
+        syncLayers = isOn;
+    }
     private void OnToggleRandomChanged(bool isOn)
     {
         randomLayers = isOn;
